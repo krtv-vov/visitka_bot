@@ -1,10 +1,14 @@
+import os
 from fastapi import FastAPI, Request
 from aiogram import Bot, Dispatcher, F
 from aiogram.types import Message, CallbackQuery, Update, InlineKeyboardMarkup
 from aiogram.filters import CommandStart
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-BOT_TOKEN = "9037503874:AAGKKDmWb4jO3hj4bDFJKI4s6ZOeXIzr5N4"
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+if not BOT_TOKEN:
+    raise RuntimeError("BOT_TOKEN не задан в переменных окружения Vercel")
+
 MY_USERNAME = "aeeeqk"
 
 bot = Bot(token=BOT_TOKEN)
