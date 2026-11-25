@@ -1,14 +1,6 @@
-import os
 from fastapi import FastAPI, Request
 from aiogram import Bot, Dispatcher, F
-from aiogram.types import (
-    Message,
-    CallbackQuery,
-    Update,
-    InlineKeyboardMarkup,
-    InputMediaPhoto,
-    FSInputFile,
-)
+from aiogram.types import Message, CallbackQuery, Update, InlineKeyboardMarkup
 from aiogram.filters import CommandStart
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
@@ -20,19 +12,13 @@ dp = Dispatcher()
 app = FastAPI()
 
 
-def get_image(filename: str) -> FSInputFile:
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    img_path = os.path.join(base_dir, "img", filename)
-    return FSInputFile(img_path)
-
-
 def get_main_menu() -> InlineKeyboardMarkup:
     kb = InlineKeyboardBuilder()
-    kb.button(text="💻 Разработка (Боты / Сайты)", callback_data="show_dev")
-    kb.button(text="🛠 Помощь с ПК (Удаленно)", callback_data="show_pc")
+    kb.button(text="💻 Разработка", callback_data="show_dev")
+    kb.button(text="🛠 Помощь с ПК", callback_data="show_pc")
     kb.button(text="🎨 Графический дизайн", callback_data="show_design")
-    kb.button(text="👤 Мои работы и Отзывы", url="https://t.me/+4HX3Qi92GnAyNTM6")
-    kb.button(text="💬 Написать мне лично", url=f"https://t.me/{MY_USERNAME}")
+    kb.button(text="⭐ Кейсы и отзывы", url="https://t.me/+4HX3Qi92GnAyNTM6")
+    kb.button(text="💬 Личка", url=f"https://t.me/{MY_USERNAME}")
     return kb.adjust(1, 1, 1, 2).as_markup()
 
 
@@ -46,70 +32,61 @@ def get_service_menu() -> InlineKeyboardMarkup:
 @dp.message(CommandStart())
 async def start(message: Message):
     text = (
-        "Привет! Я Павел — частный IT-специалист и разработчик.\n\n"
-        "Выполняю задачи быстро, работаю на результат. Выберите интересующее направление ниже, "
-        "чтобы узнать подробности и цены, или сразу пишите мне в личные сообщения."
+        "Привет! Я частный специалист: занимаюсь разработкой ботов и сайтов, "
+        "удалённой помощью с ПК и графическим дизайном.\n\n"
+        "Выбери раздел ниже, чтобы посмотреть услуги и цены, или сразу напиши в личку."
     )
     await message.answer(text, reply_markup=get_main_menu())
 
 
 @dp.callback_query(F.data == "back_to_main")
 async def back_to_main(call: CallbackQuery):
-    text = "Выберите интересующее направление:"
-    try:
-        await call.message.edit_text(text, reply_markup=get_main_menu())
-    except Exception:
-        await call.message.delete()
-        await call.message.answer(text, reply_markup=get_main_menu())
+    text = "Выбери раздел ниже, чтобы посмотреть услуги и цены, или сразу напиши в личку."
+    await call.message.edit_text(text, reply_markup=get_main_menu())
 
 
 @dp.callback_query(F.data == "show_dev")
 async def show_dev(call: CallbackQuery):
     text = (
-        "<b>💻 Программирование и Разработка</b>\n\n"
-        "• <b>Telegram-боты</b> (aiogram, API, базы данных) — <b>от 2 500 рублей</b>\n"
-        "• <b>Лендинги и сайты-визитки</b> под ключ — <b>от 4 000 рублей</b>\n"
-        "• <b>Скрипты автоматизации и парсинг</b> (Python) — <b>от 1 500 рублей</b>\n\n"
-        "Итоговая сумма зависит от сложности логики, интеграций и объема задач.\n\n"
-        "<i>Точную стоимость назову после короткого обсуждения вашей задачи. Это бесплатно. "
-        "Нажмите кнопку ниже, чтобы обсудить проект.</i>"
+        "<b>💻 Разработка</b>\n\n"
+        "• Telegram-боты (aiogram, API, базы данных) — <b>от 2 500 ₽</b>\n"
+        "• Лендинги и сайты-визитки под ключ — <b>от 4 000 ₽</b>\n"
+        "• Скрипты автоматизации и парсинг (Python) — <b>от 1 500 ₽</b>\n\n"
+        "Итог зависит от логики, интеграций и объёма. Точную цену скажу после короткого "
+        "обсуждения задачи — это бесплатно. Жми кнопку ниже, чтобы обсудить проект."
     )
-    media = InputMediaPhoto(media=get_image("dev.jpg"), caption=text, parse_mode="HTML")
-    await call.message.edit_media(media=media, reply_markup=get_service_menu())
+    await call.message.edit_text(text, parse_mode="HTML", reply_markup=get_service_menu())
 
 
 @dp.callback_query(F.data == "show_pc")
 async def show_pc(call: CallbackQuery):
     text = (
-        "<b>🛠 Удаленная помощь с ПК</b>\n\n"
-        "• <b>Удаленная настройка и решение проблем</b> (AnyDesk / RuDesk) — <b>от 700 рублей</b>\n"
-        "• <b>Установка и оптимизация Windows, драйверов и ПО</b> — <b>от 1 000 рублей</b>\n"
-        "• <b>Чистка системы от вирусов и ускорение работы</b> — <b>от 800 рублей</b>\n\n"
-        "Базовое подключение и решение типовых задач входят в стоимость старта; если работа затягивается "
-        "или требует глубокой настройки — применяется почасовая ставка <b>от 500 рублей/час</b>.\n\n"
-        "<i>Точную стоимость назову после короткого обсуждения вашей задачи. Это бесплатно. "
-        "Жмите кнопку для связи.</i>"
+        "<b>🛠 Помощь с ПК</b>\n\n"
+        "• Консультация по задаче — <b>бесплатно</b>\n"
+        "• Удалённая настройка и решение проблем (AnyDesk / RuDesk) — <b>от 700 ₽</b>\n"
+        "• Выездная помощь с ПК — <b>500 ₽</b>\n"
+        "• Установка и настройка Windows, драйверов и ПО — <b>от 1 000 ₽</b>\n"
+        "• Чистка от вирусов и ускорение системы — <b>от 800 ₽</b>\n\n"
+        "Типовые задачи входят в старт; если работа затягивается или требует глубокой настройки — "
+        "<b>от 500 ₽/час</b>. Точную стоимость назову бесплатно после короткого обсуждения задачи — "
+        "жми кнопку ниже."
     )
-    media = InputMediaPhoto(media=get_image("pc.jpg"), caption=text, parse_mode="HTML")
-    await call.message.edit_media(media=media, reply_markup=get_service_menu())
+    await call.message.edit_text(text, parse_mode="HTML", reply_markup=get_service_menu())
 
 
 @dp.callback_query(F.data == "show_design")
 async def show_design(call: CallbackQuery):
     text = (
         "<b>🎨 Графический дизайн</b>\n\n"
-        "• <b>Логотипы и фирменный стиль</b> — <b>от 1 500 рублей</b>\n"
-        "• <b>Рекламные баннеры и оформление соцсетей</b> — <b>от 600 рублей</b>\n"
-        "• <b>Карточки для маркетплейсов и визитки</b> — <b>от 500 рублей</b> (за карточку/макет)\n\n"
-        "Вся работа ведется в <b>Photoshop</b> — аккуратно, с учетом задач и формата площадки.\n\n"
-        "<i>Точную стоимость назову после короткого обсуждения вашей задачи. Это бесплатно. "
-        "Напишите мне, чтобы обсудить визуал.</i>"
+        "• Логотипы и фирменный стиль — <b>от 1 500 ₽</b>\n"
+        "• Рекламные баннеры и оформление соцсетей — <b>от 600 ₽</b>\n"
+        "• Карточки для маркетплейсов и визитки — <b>от 500 ₽</b> (за макет)\n\n"
+        "Итог зависит от сложности и объёма. Точную стоимость назову бесплатно после короткого "
+        "обсуждения задачи — жми кнопку ниже."
     )
-    media = InputMediaPhoto(media=get_image("design.jpg"), caption=text, parse_mode="HTML")
-    await call.message.edit_media(media=media, reply_markup=get_service_menu())
+    await call.message.edit_text(text, parse_mode="HTML", reply_markup=get_service_menu())
 
 
-# --- ТОЧКА ВХОДА ДЛЯ VERCEL ---
 @app.post("/webhook")
 async def webhook_handler(request: Request):
     update_data = await request.json()
